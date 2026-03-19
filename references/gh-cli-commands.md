@@ -210,6 +210,47 @@ gh issue list --repo <OWNER>/<REPO> --state open --json number,title,labels,assi
 gh issue view <ISSUE_URL> --json title,body,comments,labels,assignees,state
 ```
 
+## Label Management (for Multi-Agent Filtering)
+
+Labels enable multiple independent agents to work the same board. Each agent is optionally scoped to a label and only processes matching issues.
+
+### Create a label
+
+```bash
+gh label create <LABEL> --repo <OWNER>/<REPO> --description "<description>" --color "<hex>"
+```
+
+### Add a label to an issue
+
+```bash
+gh issue edit <ISSUE_URL> --add-label "<LABEL>"
+
+# Multiple labels
+gh issue edit <ISSUE_URL> --add-label "<LABEL1>,<LABEL2>"
+```
+
+### Remove a label from an issue
+
+```bash
+gh issue edit <ISSUE_URL> --remove-label "<LABEL>"
+```
+
+### List issues with a specific label
+
+```bash
+gh issue list --repo <OWNER>/<REPO> --label "<LABEL>" --state open --json number,title,url
+```
+
+### List all labels in a repo
+
+```bash
+gh label list --repo <OWNER>/<REPO>
+```
+
+### Filter board items by label
+
+The `item-list` command doesn't support label filtering directly. Use GraphQL (see `graphql-recipes.md` recipe #6) or filter locally by checking each issue's labels.
+
 ## Gotchas
 
 1. **`--project-id` vs `--owner` + `<NUMBER>`**: `item-edit` requires `--project-id` (the node ID like `PVT_...`), while `item-list`, `field-list`, `view` use `--owner` + `<NUMBER>`.

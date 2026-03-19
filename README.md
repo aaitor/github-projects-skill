@@ -50,6 +50,16 @@ Your GitHub Projects v2 board should have these standard fields:
 
 Add a **README** to your board (via board settings) describing your workflow rules. Agents read this README at runtime to understand board-specific conventions.
 
+### Multi-Agent Setup (Optional)
+
+To run multiple independent agents on the same board, use **labels** to scope each agent to a subset of issues:
+
+1. Create labels in the repo: `gh label create research --repo owner/repo`
+2. Label issues: `gh issue edit <URL> --add-label research`
+3. Tell each agent its label scope — the agent will only pick up issues with that label
+
+An agent given no label filter processes any issue (default behavior).
+
 ## Quick Start
 
 Once installed, an agent can discover and work with any board:

@@ -89,10 +89,49 @@ Resolved field map:
 
 ## Step 2: List Todo Items
 
+### All Todo items (no label filter)
+
 ```bash
 $ gh project item-list 7 --owner aaitor --format json --limit 100 \
     | jq '[.items[] | select(.status == "Todo")]'
 ```
+
+### Todo items scoped to a label (e.g., "research" agent)
+
+```bash
+$ gh api graphql -f query='
+  query($owner: String!, $number: Int!) {
+    user(login: $owner) {
+      projectV2(number: $number) {
+        items(first: 100) {
+          nodes {
+            id
+            fieldValueByName(name: "Status") {
+              ... on ProjectV2ItemFieldSingleSelectValue { name }
+            }
+            content {
+              ... on Issue {
+                number
+                title
+                url
+                labels(first: 20) {
+                  nodes { name }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+' -f owner="aaitor" -F number=7 \
+  --jq '.data.user.projectV2.items.nodes[]
+    | select(.content.labels.nodes[]?.name == "research")
+    | select(.fieldValueByName.name == "Todo")
+    | {id, title: .content.title, number: .content.number}'
+```
+
+Example output:
 
 ```json
 [

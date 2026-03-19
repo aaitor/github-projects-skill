@@ -10,6 +10,7 @@ Every pattern begins with:
 # Store these for the session
 PROJECT_NUMBER=<NUMBER>
 OWNER=<OWNER>
+AGENT_LABEL=""  # Optional: set to a label name (e.g., "research") to scope this agent
 
 # Discover board
 PROJECT_JSON=$(gh project view $PROJECT_NUMBER --owner $OWNER --format json)
@@ -39,10 +40,50 @@ ITEMS_JSON=$(gh project item-list $PROJECT_NUMBER --owner $OWNER --format json -
 
 ### Steps
 
-1. **Filter items by "Todo" status**:
+1. **Filter items by "Todo" status** (and optionally by label):
 
 ```bash
+# All Todo items (no label filter)
 echo "$ITEMS_JSON" | jq '[.items[] | select(.status == "Todo")]'
+```
+
+If the agent has a label scope (`AGENT_LABEL` is set), use GraphQL to filter by label (see `graphql-recipes.md` recipe #6):
+
+```bash
+# Todo items with a specific label (via GraphQL)
+gh api graphql -f query='
+  query($owner: String!, $number: Int!) {
+    user(login: $owner) {
+      projectV2(number: $number) {
+        items(first: 100) {
+          nodes {
+            id
+            fieldValueByName(name: "Status") {
+              ... on ProjectV2ItemFieldSingleSelectValue { name }
+            }
+            fieldValueByName(name: "Priority") {
+              ... on ProjectV2ItemFieldSingleSelectValue { name }
+            }
+            content {
+              ... on Issue {
+                number
+                title
+                url
+                labels(first: 20) {
+                  nodes { name }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+' -f owner="$OWNER" -F number=$PROJECT_NUMBER \
+  --jq ".data.user.projectV2.items.nodes[]
+    | select(.content.labels.nodes[]?.name == \"$AGENT_LABEL\")
+    | select(.fieldValueByName.name == \"Todo\")
+    | {id, title: .content.title, number: .content.number, priority: (.fieldValueByName // {} | .name)}"
 ```
 
 2. **Read board README** to check for any priority rules or constraints:
@@ -54,7 +95,7 @@ echo "$BOARD_README"
 3. **Sort by priority** (Critical first). The priority order is:
    - Critical > Very High > High > Average > Low > Very Low > Zero
 
-Since `item-list` doesn't return priority in the simple format, use GraphQL for priority-aware sorting (see `graphql-recipes.md` recipe #2), or read each issue to check.
+The GraphQL query above returns priority directly. For the CLI approach, use GraphQL recipe #2 for priority-aware sorting, or read each issue to check.
 
 4. **Claim the item** by moving to "In Progress":
 
@@ -244,11 +285,12 @@ _Updated by \`<AGENT_NAME>\` at $(date -u +%Y-%m-%dT%H:%M:%SZ)_"
 gh issue view "<PARENT_ISSUE_URL>" --json title,body,comments
 ```
 
-2. **Create sub-issues**:
+2. **Create sub-issues** (add `--label` to route to a specific agent):
 
 ```bash
 SUB_URL=$(gh issue create --repo <OWNER>/<REPO> \
   --title "<parent title> — <sub-task description>" \
+  --label "<LABEL>" \
   --body "Parent: <PARENT_ISSUE_URL>
 
 ## Scope

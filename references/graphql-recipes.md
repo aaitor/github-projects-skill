@@ -217,6 +217,55 @@ gh api graphql -f query='
 
 For more than a few items, generate the mutation dynamically in a script.
 
+## 6. Filter Board Items by Label
+
+Filter board items to only those issues that have a specific label. Useful for multi-agent setups where each agent is scoped to a label.
+
+```bash
+gh api graphql -f query='
+  query($owner: String!, $number: Int!) {
+    user(login: $owner) {
+      projectV2(number: $number) {
+        items(first: 100) {
+          nodes {
+            id
+            fieldValueByName(name: "Status") {
+              ... on ProjectV2ItemFieldSingleSelectValue { name }
+            }
+            fieldValueByName(name: "Priority") {
+              ... on ProjectV2ItemFieldSingleSelectValue { name }
+            }
+            content {
+              ... on Issue {
+                number
+                title
+                url
+                labels(first: 20) {
+                  nodes { name }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+' -f owner="<OWNER>" -F number=<NUMBER> \
+  --jq '.data.user.projectV2.items.nodes[]
+    | select(.content.labels.nodes[]?.name == "<LABEL>")
+    | {id, title: .content.title, number: .content.number, status: .fieldValueByName.name}'
+```
+
+Combine with status filter for scoped backlog:
+
+```bash
+# Get only "Todo" items with a specific label
+... --jq '.data.user.projectV2.items.nodes[]
+  | select(.content.labels.nodes[]?.name == "<LABEL>")
+  | select(.fieldValueByName.name == "Todo")
+  | {id, title: .content.title, number: .content.number}'
+```
+
 ## Notes
 
 - **Organization-owned projects**: Replace `user(login: $owner)` with `organization(login: $owner)` in all queries.

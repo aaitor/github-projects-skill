@@ -16,6 +16,39 @@ Use this skill when:
 - Handing off work between agents
 - Any mention of "board", "backlog", "sprint", "kanban", "project board"
 
+## Agent Filtering (Optional)
+
+Agents can be scoped to a subset of board issues using **labels**. This enables multiple independent agents to work the same board without stepping on each other.
+
+- An agent given a label filter (e.g., `--label research`) only processes issues with that label
+- An agent given **no label filter** processes any issue on the board (default behavior)
+- Labels are assigned to issues, not board items — use `gh issue edit` to manage them
+- Multiple labels can be combined: an issue labeled `research,security` is visible to both the "research" agent and the "security" agent
+
+### Label conventions
+
+Use short, lowercase labels that describe the agent's domain or role:
+
+| Label | Agent role |
+|-------|-----------|
+| `research` | Research and analysis tasks |
+| `coding` | Implementation and bug fixes |
+| `docs` | Documentation tasks |
+| `devops` | Infrastructure and deployment |
+| `review` | Code review and QA |
+
+Create labels in the repo if they don't exist:
+
+```bash
+gh label create <LABEL> --repo <OWNER>/<REPO> --description "<description>"
+```
+
+Assign a label to an issue:
+
+```bash
+gh issue edit <ISSUE_URL> --add-label "<LABEL>"
+```
+
 ## Board Discovery (Mandatory First Step)
 
 Before any board operation, discover the board structure. All field IDs and option IDs are resolved dynamically — never hardcode them.
@@ -71,8 +104,27 @@ All commands use dynamically discovered IDs from the Board Discovery step.
 ### List backlog items by status
 
 ```bash
+# All Todo items (no label filter)
 gh project item-list <NUMBER> --owner <OWNER> --format json --limit 100 \
   | jq '[.items[] | select(.status == "Todo")]'
+```
+
+### List backlog items filtered by label
+
+When an agent is scoped to a label, cross-reference the board items with the issue's labels. The `item-list` output includes each item's issue URL — use GraphQL to filter by label efficiently (see `references/graphql-recipes.md` recipe #6), or filter locally:
+
+```bash
+# Get Todo items, then check each for the target label
+TODO_ITEMS=$(gh project item-list <NUMBER> --owner <OWNER> --format json --limit 100 \
+  | jq '[.items[] | select(.status == "Todo")]')
+
+# Filter by label (requires checking each issue)
+echo "$TODO_ITEMS" | jq -r '.[].content.url' | while read url; do
+  labels=$(gh issue view "$url" --json labels --jq '.labels[].name')
+  if echo "$labels" | grep -q "^<LABEL>$"; then
+    echo "$url"
+  fi
+done
 ```
 
 ### Move item to a new status
@@ -94,8 +146,9 @@ gh issue comment <ISSUE_URL> --body "<structured comment>"
 ### Create an issue and add to board
 
 ```bash
-# Create the issue
-gh issue create --repo <OWNER>/<REPO> --title "<title>" --body "<body>"
+# Create the issue (add --label to assign to a specific agent)
+gh issue create --repo <OWNER>/<REPO> --title "<title>" --body "<body>" \
+  --label "<LABEL>"
 
 # Add to board (use the returned issue URL)
 gh project item-add <NUMBER> --owner <OWNER> --url <ISSUE_URL>
@@ -158,7 +211,7 @@ _Updated by `<AGENT_NAME>` at <ISO 8601 timestamp>_
 ### Pick Up Work
 
 1. **Discover** the board (see Board Discovery above)
-2. **List** items with status "Todo"
+2. **List** items with status "Todo" — if a label filter was provided, only consider issues with that label
 3. **Sort** by priority (Critical > Very High > High > Average > Low > Very Low > Zero)
 4. **Claim** the highest-priority item by moving it to "In Progress"
 5. **Comment** on the issue with an "Agent Update" noting you've started
