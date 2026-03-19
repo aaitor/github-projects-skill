@@ -44,7 +44,7 @@ Your GitHub Projects v2 board should have these standard fields:
 
 | Field | Type | Options |
 |-------|------|---------|
-| **Status** | SingleSelect | In Definition, Todo, In progress, To Review, To Approve, Done |
+| **Status** | SingleSelect | In Definition, Todo, In progress, To Review, Ready, Done |
 | **Priority** | SingleSelect | Critical, Very High, High, Average, Low, Very Low, Zero |
 | **Size** | SingleSelect | XL, L, M, S, XS |
 

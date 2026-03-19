@@ -24,7 +24,7 @@ STATUS_FIELD_ID=$(echo "$FIELDS_JSON" | jq -r '.fields[] | select(.name == "Stat
 TODO_ID=$(echo "$FIELDS_JSON" | jq -r '.fields[] | select(.name == "Status") | .options[] | select(.name == "Todo") | .id')
 IN_PROGRESS_ID=$(echo "$FIELDS_JSON" | jq -r '.fields[] | select(.name == "Status") | .options[] | select(.name == "In progress") | .id')
 TO_REVIEW_ID=$(echo "$FIELDS_JSON" | jq -r '.fields[] | select(.name == "Status") | .options[] | select(.name == "To Review") | .id')
-TO_APPROVE_ID=$(echo "$FIELDS_JSON" | jq -r '.fields[] | select(.name == "Status") | .options[] | select(.name == "To Approve") | .id')
+TO_APPROVE_ID=$(echo "$FIELDS_JSON" | jq -r '.fields[] | select(.name == "Status") | .options[] | select(.name == "Ready") | .id')
 
 # Resolve Priority field
 PRIORITY_FIELD_ID=$(echo "$FIELDS_JSON" | jq -r '.fields[] | select(.name == "Priority") | .id')
@@ -193,7 +193,7 @@ _Updated by \`<AGENT_NAME>\` at $(date -u +%Y-%m-%dT%H:%M:%SZ)_"
 
 ### Steps
 
-1. **Move to "To Approve"**:
+1. **Move to "Ready"**:
 
 ```bash
 gh project item-edit \

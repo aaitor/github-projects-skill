@@ -45,7 +45,7 @@ $ gh project field-list 7 --owner aaitor --format json
         {"id": "f75ad846", "name": "Todo"},
         {"id": "47fc9ee4", "name": "In progress"},
         {"id": "91a30e6b", "name": "To Review"},
-        {"id": "d68422da", "name": "To Approve"},
+        {"id": "d68422da", "name": "Ready"},
         {"id": "98236657", "name": "Done"}
       ]
     },
@@ -83,7 +83,7 @@ Resolved field map:
 
 | Field | Field ID | Key Options |
 |-------|----------|-------------|
-| Status | `PVTSSF_...zFog` | Todo: `f75ad846`, In progress: `47fc9ee4`, To Review: `91a30e6b`, To Approve: `d68422da` |
+| Status | `PVTSSF_...zFog` | Todo: `f75ad846`, In progress: `47fc9ee4`, To Review: `91a30e6b`, Ready: `d68422da` |
 | Priority | `PVTSSF_...zFr8` | Critical: `a9105b3c`, Very High: `9fe5bcdf`, High: `419b8c12` |
 | Size | `PVTSSF_...zFsA` | XL: `d1a5ff40`, L: `237d5f9e`, M: `329288a7`, S: `5ce5b392`, XS: `972adeea` |
 
@@ -150,7 +150,7 @@ _Updated by \`Claude Code\` at 2026-03-19T10:30:00Z_"
 After completing the work:
 
 ```bash
-# Move to "To Approve"
+# Move to "Ready"
 $ gh project item-edit \
     --project-id "PVT_kwHOABpYtM4BSMQL" \
     --id "PVTI_example123" \
@@ -195,7 +195,7 @@ Confirm the status was updated:
 ```bash
 $ gh project item-list 7 --owner aaitor --format json --limit 100 \
     | jq '.items[] | select(.id == "PVTI_example123") | .status'
-"To Approve"
+"Ready"
 ```
 
 The issue is now waiting for human approval. The human will either:

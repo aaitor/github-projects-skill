@@ -47,7 +47,7 @@ The standard 6-status lifecycle:
 
 ```
 In Definition → Todo → In Progress → To Review → Done
-                                    → To Approve → Done
+                                    → Ready → Done
 ```
 
 ### Who controls what
@@ -57,10 +57,10 @@ In Definition → Todo → In Progress → To Review → Done
 | In Definition → Todo | Human (issue is ready for work) |
 | Todo → In Progress | Agent (claiming work) |
 | In Progress → To Review | Agent (needs clarification or review) |
-| In Progress → To Approve | Agent (work complete, needs final approval) |
+| In Progress → Ready | Agent (work complete, needs final approval) |
 | To Review → Todo | Human (feedback given, back to backlog) |
-| To Approve → Done | Human (approved) |
-| To Approve → Todo | Human (rejected, needs rework) |
+| Ready → Done | Human (approved) |
+| Ready → Todo | Human (rejected, needs rework) |
 
 Agents should **never** move items to "In Definition" or "Done" — those are human-controlled states.
 
@@ -168,7 +168,7 @@ _Updated by `<AGENT_NAME>` at <ISO 8601 timestamp>_
 1. **Read** the issue description, comments, and attachments for requirements
 2. **Implement** the requested work
 3. **Comment** periodically with progress updates
-4. **Move** to "To Review" (if you need feedback) or "To Approve" (if work is complete)
+4. **Move** to "To Review" (if you need feedback) or "Ready" (if work is complete)
 5. **Comment** with a final summary of what was done
 
 ### Ask for Clarification
@@ -181,7 +181,7 @@ _Updated by `<AGENT_NAME>` at <ISO 8601 timestamp>_
 
 ### Submit for Approval
 
-1. Move the issue to **"To Approve"**
+1. Move the issue to **"Ready"**
 2. Add a comment with:
    - Summary of all changes made
    - Links to PRs or commits
