@@ -1,34 +1,41 @@
-# Example: Core Management Board
+# Walkthrough: An Agent Working a Board
 
-End-to-end walkthrough using the "Core Management" board (project #7, owner: aaitor).
+End-to-end walkthrough of an agent picking up and completing work on a board.
+It uses a fictional board — owner `octo-org`, project #1, repo `octo-org/webapp` —
+so you can map every command to your own board by swapping the owner and number.
 
-## Step 1: Discover Board
+> The field and option IDs below (`PVT_…`, `f75ad846`, …) are illustrative. Yours
+> will differ — always resolve them at runtime with the discovery commands in Step 1.
+> Never hardcode them.
 
-### Get project metadata
+## Step 1: Discover the Board
+
+### Project metadata and README
 
 ```bash
-$ gh project view 7 --owner aaitor --format json
+$ gh project view 1 --owner octo-org --format json
 ```
 
 ```json
 {
   "id": "PVT_kwHOABpYtM4BSMQL",
-  "number": 7,
-  "title": "Core Management",
+  "number": 1,
+  "title": "Engineering Backlog",
   "closed": false,
-  "readme": "This Project Board allows to control the AI Agent tasks. Board Management:\n\n- New issues are created in the \"In Definition\" status. When they have enough details, and they are ready to be started they move to the \"Todo\" status\n- Issues in the \"Todo\" status are ready to be implemented...",
-  "url": "https://github.com/users/aaitor/projects/7"
+  "readme": "This board tracks AI-agent work.\n\n- New issues start in \"In Definition\". When fully specified they move to \"Todo\".\n- \"Todo\" items are ready to be implemented...",
+  "url": "https://github.com/orgs/octo-org/projects/1"
 }
 ```
 
-Key values:
-- **Project ID**: `PVT_kwHOABpYtM4BSMQL`
-- **Board README**: Describes the 6-status workflow with human/agent responsibilities
+Key values to capture:
 
-### Get fields and options
+- **Project ID**: `PVT_kwHOABpYtM4BSMQL` — required for every `item-edit`.
+- **Board README**: the authoritative description of this board's workflow rules.
+
+### Fields and options
 
 ```bash
-$ gh project field-list 7 --owner aaitor --format json
+$ gh project field-list 1 --owner octo-org --format json
 ```
 
 ```json
@@ -79,29 +86,29 @@ $ gh project field-list 7 --owner aaitor --format json
 }
 ```
 
-Resolved field map:
+Resolved field map for this session:
 
-| Field | Field ID | Key Options |
+| Field | Field ID | Key options |
 |-------|----------|-------------|
-| Status | `PVTSSF_...zFog` | Todo: `f75ad846`, In progress: `47fc9ee4`, To Review: `91a30e6b`, Ready: `d68422da` |
-| Priority | `PVTSSF_...zFr8` | Critical: `a9105b3c`, Very High: `9fe5bcdf`, High: `419b8c12` |
-| Size | `PVTSSF_...zFsA` | XL: `d1a5ff40`, L: `237d5f9e`, M: `329288a7`, S: `5ce5b392`, XS: `972adeea` |
+| Status | `PVTSSF_…zFog` | Todo: `f75ad846`, In progress: `47fc9ee4`, To Review: `91a30e6b`, Ready: `d68422da` |
+| Priority | `PVTSSF_…zFr8` | Critical: `a9105b3c`, Very High: `9fe5bcdf`, High: `419b8c12` |
+| Size | `PVTSSF_…zFsA` | XL: `d1a5ff40`, L: `237d5f9e`, M: `329288a7`, S: `5ce5b392`, XS: `972adeea` |
 
 ## Step 2: List Todo Items
 
 ### All Todo items (no label filter)
 
 ```bash
-$ gh project item-list 7 --owner aaitor --format json --limit 100 \
+$ gh project item-list 1 --owner octo-org --format json --limit 100 \
     | jq '[.items[] | select(.status == "Todo")]'
 ```
 
-### Todo items scoped to a label (e.g., "research" agent)
+### Todo items scoped to a label (e.g. a "research" agent)
 
 ```bash
 $ gh api graphql -f query='
   query($owner: String!, $number: Int!) {
-    user(login: $owner) {
+    organization(login: $owner) {
       projectV2(number: $number) {
         items(first: 100) {
           nodes {
@@ -114,9 +121,7 @@ $ gh api graphql -f query='
                 number
                 title
                 url
-                labels(first: 20) {
-                  nodes { name }
-                }
+                labels(first: 20) { nodes { name } }
               }
             }
           }
@@ -124,12 +129,15 @@ $ gh api graphql -f query='
       }
     }
   }
-' -f owner="aaitor" -F number=7 \
-  --jq '.data.user.projectV2.items.nodes[]
+' -f owner="octo-org" -F number=1 \
+  --jq '.data.organization.projectV2.items.nodes[]
     | select(.content.labels.nodes[]?.name == "research")
     | select(.fieldValueByName.name == "Todo")
     | {id, title: .content.title, number: .content.number}'
 ```
+
+> Use `organization(login: …)` for org-owned boards and `user(login: …)` for
+> user-owned boards.
 
 Example output:
 
@@ -142,8 +150,8 @@ Example output:
     "content": {
       "type": "Issue",
       "number": 42,
-      "repository": "aaitor/core",
-      "url": "https://github.com/aaitor/core/issues/42"
+      "repository": "octo-org/webapp",
+      "url": "https://github.com/octo-org/webapp/issues/42"
     }
   }
 ]
@@ -151,7 +159,7 @@ Example output:
 
 ## Step 3: Claim an Issue
 
-Move the highest-priority "Todo" item to "In Progress":
+Move the highest-priority "Todo" item to "In progress":
 
 ```bash
 $ gh project item-edit \
@@ -161,10 +169,10 @@ $ gh project item-edit \
     --single-select-option-id "47fc9ee4"
 ```
 
-## Step 4: Add Progress Comment
+## Step 4: Add a Progress Comment
 
 ```bash
-$ gh issue comment "https://github.com/aaitor/core/issues/42" --body "## Agent Update — Claude Code
+$ gh issue comment "https://github.com/octo-org/webapp/issues/42" --body "## Agent Update — Claude Code
 
 **Status**: Working
 **Action**: Picked up from backlog, starting implementation
@@ -197,7 +205,7 @@ $ gh project item-edit \
     --single-select-option-id "d68422da"
 
 # Add completion comment
-$ gh issue comment "https://github.com/aaitor/core/issues/42" --body "## Agent Update — Claude Code
+$ gh issue comment "https://github.com/octo-org/webapp/issues/42" --body "## Agent Update — Claude Code
 
 **Status**: Complete
 **Action**: Auth middleware implemented, submitting for approval
@@ -208,7 +216,7 @@ Implemented JWT-based authentication middleware following existing patterns in t
 
 ### Changes
 
-- PR: https://github.com/aaitor/core/pull/43
+- PR: https://github.com/octo-org/webapp/pull/43
 - Added \`src/middleware/auth.ts\` — JWT validation middleware
 - Added \`src/middleware/auth.test.ts\` — Unit tests (92% coverage)
 - Updated \`src/routes/index.ts\` — Applied middleware to protected routes
@@ -232,11 +240,12 @@ _Updated by \`Claude Code\` at 2026-03-19T14:45:00Z_"
 Confirm the status was updated:
 
 ```bash
-$ gh project item-list 7 --owner aaitor --format json --limit 100 \
+$ gh project item-list 1 --owner octo-org --format json --limit 100 \
     | jq '.items[] | select(.id == "PVTI_example123") | .status'
 "Ready"
 ```
 
 The issue is now waiting for human approval. The human will either:
-- Move to "Done" (approved)
-- Move to "Todo" with feedback comments (needs rework)
+
+- Move it to "Done" (approved), or
+- Move it to "Todo" with feedback comments (needs rework).

@@ -288,6 +288,7 @@ gh issue view "<PARENT_ISSUE_URL>" --json title,body,comments
 2. **Create sub-issues** (add `--label` to route to a specific agent):
 
 ```bash
+# gh issue create prints the new issue URL to stdout — capture it directly.
 SUB_URL=$(gh issue create --repo <OWNER>/<REPO> \
   --title "<parent title> — <sub-task description>" \
   --label "<LABEL>" \
@@ -300,8 +301,7 @@ SUB_URL=$(gh issue create --repo <OWNER>/<REPO> \
 ## Acceptance Criteria
 
 - [ ] <criterion 1>
-- [ ] <criterion 2>" \
-  --json url --jq '.url')
+- [ ] <criterion 2>")
 ```
 
 3. **Add each sub-issue to the board**:

@@ -49,6 +49,13 @@ Assign a label to an issue:
 gh issue edit <ISSUE_URL> --add-label "<LABEL>"
 ```
 
+## Board Requirements
+
+This skill expects a board with three single-select fields — `Status`
+(In Definition, Todo, In progress, To Review, Ready, Done), `Priority`
+(Critical → Zero), and `Size` (XL → XS). To create a compatible board from scratch,
+see `docs/board-setup.md`.
+
 ## Board Discovery (Mandatory First Step)
 
 Before any board operation, discover the board structure. All field IDs and option IDs are resolved dynamically — never hardcode them.
@@ -257,4 +264,6 @@ Before marking any board operation as complete, verify:
 - [ ] No stale "In Progress" items left behind (if you're done with an item, move it)
 - [ ] Board README rules were followed
 
-See `references/` for detailed command reference, GraphQL recipes, and expanded workflow patterns.
+See `references/` for the detailed command reference, GraphQL recipes, and expanded
+workflow patterns; `examples/` for installation recipes, usage scenarios, and a full
+walkthrough; and `docs/board-setup.md` to create a compatible board.
